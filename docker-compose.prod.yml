@@ -1,0 +1,22 @@
+# Producción (Ubuntu): docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# La web solo se expone a través de nginx, por http en el puerto 80 (uso en la red interna).
+
+services:
+  web:
+    restart: unless-stopped
+    expose:
+      - "8550"
+
+  worker:
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.29-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/portapapeles.js:/usr/share/nginx/sire/portapapeles.js:ro
+    depends_on:
+      - web

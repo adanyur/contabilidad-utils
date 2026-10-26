@@ -1,0 +1,19 @@
+# Base común a desarrollo y producción.
+#   Desarrollo: docker compose up --build          (carga también docker-compose.override.yml)
+#   Producción: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# La BD de historial es un PostgreSQL externo (HIST_DSN en .env); el esquema se crea con
+#   docker compose run --rm web python -m app.migrar
+
+services:
+  web:
+    build: .
+    command: ["python", "-m", "app.main"]
+    env_file: .env
+
+  worker:
+    build: .
+    command: ["python", "-m", "app.worker"]
+    env_file: .env
+    # docker stop envía SIGTERM: el worker termina el trabajo en curso antes de salir
+    stop_grace_period: 120s

@@ -1,0 +1,6 @@
+flet[web]==1.0.4
+# flet-web 1.0.4 usa FastAPI(openapi_prefix=...), parámetro eliminado en FastAPI 0.145
+fastapi==0.144.0
+psycopg[binary,pool]==3.3.6
+psycopg-pool==3.3.3
+openpyxl==3.1.5

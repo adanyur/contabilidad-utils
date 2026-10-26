@@ -1,0 +1,46 @@
+# Solo desarrollo: docker compose lo carga automáticamente junto con docker-compose.yml.
+
+services:
+  # BD de Bizlinks simulada con datos de ejemplo. Opcional: la app usa la BD real (BIZLINKS_DSN).
+  # Para usarla: docker compose --profile simulado up -d y apuntar BIZLINKS_DSN a bizlinks_dev.
+  bizlinks_dev:
+    profiles: ["simulado"]
+    image: ghcr.io/pgmq/pg18-pgmq:v1.8.0
+    environment:
+      POSTGRES_DB: bizlinks
+      POSTGRES_USER: bizlinks
+      POSTGRES_PASSWORD: ${BIZLINKS_DEV_PASSWORD}
+    volumes:
+      - ./docker/bizlinks_dev:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bizlinks -d bizlinks"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Entrada desde otras PCs de la red: http://192.168.10.146 (puerto 80), igual que en producción
+  nginx:
+    image: nginx:1.29-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/portapapeles.js:/usr/share/nginx/sire/portapapeles.js:ro
+    depends_on:
+      - web
+
+  web:
+    ports:
+      - "8550:8550"
+    volumes:
+      - ./app:/srv/app
+      - ./tests:/srv/tests
+      - ./sql:/srv/sql
+
+  worker:
+    volumes:
+      - ./app:/srv/app
+      - ./tests:/srv/tests
+      - ./sql:/srv/sql
